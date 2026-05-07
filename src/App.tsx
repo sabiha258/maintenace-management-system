@@ -265,9 +265,9 @@ export default function App() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <StatCard title="Total Asset Units" value={stats.totalProperties} trend={2} />
-                  <StatCard title="Collections YTD" value={`$${stats.totalCollected.toLocaleString()}`} trend={12} />
+                  <StatCard title="Society Fund Balance" value={`$${stats.societyFundBalance.toLocaleString()}`} trend={stats.societyFundBalance > 0 ? 5 : -2} color={stats.societyFundBalance > 0 ? 'text-emerald-600' : 'text-rose-600'} />
                   <StatCard title="Outstanding Dues" value={`$${stats.pendingDues.toLocaleString()}`} trend={-5} color="text-amber-600" />
-                  <StatCard title="Active Residents" value={stats.totalResidents} trend={8} />
+                  <StatCard title="Occupancy Metric" value={`${stats.occupancyRate}%`} trend={1} />
                 </div>
 
                 {/* Main Visual Grid */}
@@ -275,16 +275,19 @@ export default function App() {
                   {/* Left: Collection Analytics */}
                   <div className="lg:col-span-8 card-base flex flex-col">
                     <div className="flex items-center justify-between mb-8">
-                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest px-1">Financial Performance Metric</h4>
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest px-1">Financial Integrity Monitor</h4>
                       <div className="flex gap-4">
                         <span className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          <div className="w-2 h-2 rounded bg-blue-600 mr-2"></div> Collection ($)
+                          <div className="w-2 h-2 rounded bg-blue-600 mr-2"></div> Collection
+                        </span>
+                        <span className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <div className="w-2 h-2 rounded bg-slate-300 mr-2"></div> Expenses
                         </span>
                       </div>
                     </div>
                     <div className="h-[320px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stats.chartData.length > 0 ? stats.chartData : [{month: 'Jan', amount: 4500}, {month: 'Feb', amount: 5200}]}>
+                        <BarChart data={stats.chartData}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                           <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} dy={10} />
                           <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} />
@@ -292,7 +295,8 @@ export default function App() {
                             cursor={{fill: '#f8fafc'}}
                             contentStyle={{ borderRadius: '4px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.05)', fontSize: '10px', fontWeight: 700 }}
                           />
-                          <Bar dataKey="amount" fill="#2563eb" radius={[2, 2, 0, 0]} barSize={40} />
+                          <Bar dataKey="amount" fill="#2563eb" radius={[2, 2, 0, 0]} barSize={24} />
+                          <Bar dataKey="expenses" fill="#e2e8f0" radius={[2, 2, 0, 0]} barSize={24} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -411,85 +415,98 @@ export default function App() {
               </motion.div>
             )}
 
-            {activeTab === 'billing' && (
-              <motion.div key="billing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-base">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Month</th>
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Unit</th>
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Amount</th>
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Due Date</th>
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {billing.map(b => (
-                      <tr key={b.id} className="border-b border-slate-50 last:border-none hover:bg-slate-50">
-                        <td className="py-4 text-xs font-bold text-slate-800">{b.billing_month}</td>
-                        <td className="py-4 text-xs text-slate-500">{b.unit_number}</td>
-                        <td className="py-4 text-xs font-bold text-slate-800">${b.amount}</td>
-                        <td className="py-4 text-xs text-slate-500">{b.due_date}</td>
-                        <td className="py-4">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter ${
-                            b.status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-                          }`}>
-                            {b.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </motion.div>
-            )}
-
-            {activeTab === 'complaints' && (
-              <motion.div key="complaints" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-base">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Resident</th>
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Category</th>
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Priority</th>
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {complaints.map(c => (
-                      <tr key={c.id} className="border-b border-slate-50 last:border-none hover:bg-slate-50">
-                        <td className="py-4 text-xs font-bold text-slate-800">{c.resident_name}</td>
-                        <td className="py-4 text-xs text-slate-500">{c.category}</td>
-                        <td className="py-4">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter ${
-                            c.priority === 'emergency' ? 'bg-rose-600 text-white' : 
-                            c.priority === 'high' ? 'bg-rose-50 text-rose-600' : 'bg-slate-100'
-                          }`}>
-                            {c.priority}
-                          </span>
-                        </td>
-                        <td className="py-4 text-xs text-blue-600 font-bold capitalize">{c.status}</td>
-                        <td className="py-4 text-xs text-slate-400">{new Date(c.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </motion.div>
-            )}
-
             {activeTab === 'vendors' && (
-              <div className="grid grid-cols-3 gap-6">
-                 {vendors.map(v => (
-                   <div key={v.id} className="card-base">
-                      <h4 className="font-black text-slate-800 uppercase tracking-tight text-sm">{v.name}</h4>
-                      <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-1">{v.service_type}</p>
-                      <div className="mt-4 pt-4 border-t border-slate-100">
-                        <p className="text-xs text-slate-500"><span className="font-bold text-slate-600">Contact:</span> {v.contact_person}</p>
-                        <p className="text-xs text-slate-500 mt-1"><span className="font-bold text-slate-600">Phone:</span> {v.phone}</p>
-                      </div>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                   {vendors.map(v => (
+                     <div key={v.id} className="card-base">
+                        <div className="flex justify-between items-start mb-4">
+                          <h4 className="font-black text-slate-800 uppercase tracking-tight text-sm">{v.name}</h4>
+                          <span className="bg-indigo-50 text-indigo-600 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">{v.rating} <span className="text-[8px]">⭐</span></span>
+                        </div>
+                        <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">{v.service_type}</p>
+                        <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                          <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                            <span>Contract Holder:</span>
+                            <span className="text-slate-800">{v.contact_person}</span>
+                          </div>
+                          <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                            <span>Duty Status:</span>
+                            <span className="text-emerald-600">Active</span>
+                          </div>
+                        </div>
+                        <button className="w-full mt-4 py-2 bg-slate-50 border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded hover:bg-white hover:border-blue-200 hover:text-blue-600 transition-all">
+                          Manage Contract
+                        </button>
+                     </div>
+                   ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'billing' && (
+              <div className="space-y-8">
+                {/* Financial Summary Banner */}
+                <div className="bg-blue-600 p-8 rounded-lg shadow-xl shadow-blue-100 flex justify-between items-center text-white">
+                   <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-200 mb-1">Society Reserve Fund</p>
+                      <h2 className="text-4xl font-black tracking-tight">${stats?.societyFundBalance.toLocaleString()}</h2>
                    </div>
-                 ))}
+                   <div className="flex gap-4">
+                      <button className="px-6 py-2.5 bg-white text-blue-600 font-black uppercase text-[10px] tracking-widest rounded hover:bg-blue-50 transition-all">Generate Invoices</button>
+                      <button className="px-6 py-2.5 bg-blue-700 text-white font-black uppercase text-[10px] tracking-widest rounded hover:bg-blue-800 transition-all border border-blue-500">Expense Ledger</button>
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="card-base">
+                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 px-1">Upcoming Maintenance Dues</h4>
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-slate-100">
+                          <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Unit</th>
+                          <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Cycle</th>
+                          <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {billing.map(b => (
+                          <tr key={b.id} className="border-b border-slate-50 last:border-none hover:bg-slate-50">
+                            <td className="py-4 text-xs font-black text-slate-800">{b.unit_number}</td>
+                            <td className="py-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">{b.billing_month}</td>
+                            <td className="py-4 text-xs font-black text-rose-600 text-right">${b.amount}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="card-base">
+                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 px-1">Recent Expenses & Proofs</h4>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white rounded shadow-sm text-blue-600"><FileText size={16} /></div>
+                          <div>
+                            <p className="text-[10px] font-black text-slate-800 uppercase tracking-tight">Lift Monthly AMC</p>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase">Rapid Repairs • May 01</p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-black text-slate-800">$1,200</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white rounded shadow-sm text-blue-600"><FileText size={16} /></div>
+                          <div>
+                            <p className="text-[10px] font-black text-slate-800 uppercase tracking-tight">Generator Fuel</p>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase">HP Lubricants • Apr 28</p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-black text-slate-800">$450</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -509,7 +526,53 @@ export default function App() {
               </div>
             )}
 
-            {['reports'].includes(activeTab) && (
+            {activeTab === 'complaints' && (
+              <motion.div key="complaints" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-base">
+                <div className="flex justify-between items-center mb-8 px-2">
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">SLA & Ticket Resolution Center</h4>
+                  <button className="bg-blue-600 text-white text-[10px] font-black px-4 py-2 rounded uppercase tracking-widest hover:bg-blue-700 transition-all">New Service Ticket</button>
+                </div>
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Resident / Unit</th>
+                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Category</th>
+                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Priority</th>
+                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                      <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Resolution SLA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {complaints.map(c => (
+                      <tr key={c.id} className="border-b border-slate-50 last:border-none hover:bg-slate-50">
+                        <td className="py-4">
+                           <p className="text-xs font-black text-slate-800">{c.resident_name}</p>
+                           <p className="text-[9px] text-slate-400 font-bold uppercase">Unit Verified</p>
+                        </td>
+                        <td className="py-4 text-[10px] text-slate-500 font-bold uppercase tracking-wider">{c.category}</td>
+                        <td className="py-4">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter ${
+                            c.priority === 'emergency' ? 'bg-rose-600 text-white shadow-sm' : 
+                            c.priority === 'high' ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-500'
+                          }`}>
+                            {c.priority} Priority
+                          </span>
+                        </td>
+                        <td className="py-4">
+                           <div className="flex items-center gap-2">
+                             <div className={`w-1.5 h-1.5 rounded-full ${c.status === 'resolved' ? 'bg-emerald-500' : 'bg-blue-500'}`}></div>
+                             <span className="text-xs text-slate-800 font-bold capitalize">{c.status}</span>
+                           </div>
+                        </td>
+                        <td className="py-4 text-[10px] text-slate-400 font-bold">{new Date(c.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+            )}
+
+            {(activeTab === 'reports' || activeTab === 'emergency') && (
               <motion.div 
                 key="others"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -517,18 +580,26 @@ export default function App() {
                 className="bg-white p-12 rounded border border-slate-200 shadow-sm flex flex-col items-center justify-center min-h-[500px]"
               >
                 <div className="w-24 h-24 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-8 text-blue-600 shadow-inner">
-                  <Settings size={48} className="animate-spin-slow" />
+                  <div className="relative">
+                    <Settings size={48} className="animate-spin-slow" />
+                    <BarChart3 size={24} className="absolute -bottom-1 -right-1 text-emerald-500 bg-white rounded-full p-1 border border-slate-100" />
+                  </div>
                 </div>
-                <h2 className="text-xl font-black text-slate-800 tracking-tight uppercase mb-3">Module Syncing in Progress</h2>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight uppercase mb-3">Enterprise Reporting Engine</h2>
                 <p className="text-slate-400 max-w-sm text-center text-xs font-bold leading-relaxed uppercase tracking-wider">
-                  The {activeTab} engine is currently undergoing maintenance integration. Core data structures are synchronized in the backend.
+                  The {activeTab} analytics suite is processing your data warehouse. Financial summaries, defaulter lists, and vendor performance audits are being synchronized.
                 </p>
-                <button 
-                  onClick={() => setActiveTab('dashboard')}
-                  className="mt-10 px-8 py-3 bg-blue-600 text-white rounded font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-                >
-                  Return to Global Dashboard
-                </button>
+                <div className="mt-10 flex gap-4">
+                  <button 
+                    onClick={() => setActiveTab('dashboard')}
+                    className="px-8 py-3 bg-blue-600 text-white rounded font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                  >
+                    Return to Insight Center
+                  </button>
+                  <button className="px-8 py-3 bg-slate-100 text-slate-600 rounded font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all border border-slate-200">
+                    Offline Export (PDF)
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
